@@ -1,0 +1,152 @@
+name: Release Charts
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  release:
+    # depending on default permission settings for your org (contents being read-only or read-write for workloads), you will have to add permissions
+    # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#modifying-the-permissions-for-the-github_token
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.12.1
+
+      - name: Add dependency chart repos
+        run: |
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo add jetstack https://charts.jetstack.io
+          helm repo update
+
+      - name: Update chart dependencies
+        run: |
+          make deps
+
+      - name: Lint charts
+        run: |
+          make lint
+
+      - name: Package charts
+        run: |
+          make package
+
+      - name: Generate index
+        run: |
+          make index
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Optional: Create GitHub release with chart packages
+  create-release:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.12.1
+
+      - name: Add dependency chart repos
+        run: |
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo add jetstack https://charts.jetstack.io
+          helm repo update
+
+      - name: Package charts
+        run: |
+          make package
+
+      - name: Get chart version
+        id: chart_version
+        run: |
+          version=$(grep '^version:' charts/monitoring-stack/Chart.yaml | awk '{print $2}')
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.chart_version.outputs.version }}
+          release_name: Release v${{ steps.chart_version.outputs.version }}
+          body: |
+            ## Charts
+            
+            ### ankra-monitoring-stack v${{ steps.chart_version.outputs.version }}
+            
+            A comprehensive monitoring stack umbrella chart with:
+            - Prometheus (metrics collection and alerting)
+            - Grafana (visualization and dashboards)
+            - Loki (log aggregation)
+            - Tempo (distributed tracing)
+            - Alloy (telemetry collection)
+            - Fluent Bit (log processing)
+            - Ingress NGINX (ingress controller)
+            - Cert Manager (certificate management)
+            
+            ## Installation
+            
+            ```bash
+            helm repo add ankra https://ankraio.github.io/charts
+            helm repo update
+            helm install my-monitoring ankra/ankra-monitoring-stack
+            ```
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./packages/ankra-monitoring-stack-${{ steps.chart_version.outputs.version }}.tgz
+          asset_name: ankra-monitoring-stack-${{ steps.chart_version.outputs.version }}.tgz
+          asset_content_type: application/gzip

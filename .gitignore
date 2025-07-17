@@ -1,0 +1,20 @@
+# Helm packages
+packages/
+
+# Helm dependencies
+charts/*/charts/
+charts/*/Chart.lock
+
+# Common OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp

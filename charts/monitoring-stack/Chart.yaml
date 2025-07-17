@@ -1,0 +1,65 @@
+apiVersion: v2
+name: ankra-monitoring-stack
+description: Ankra's comprehensive monitoring stack umbrella chart with Prometheus, Grafana, Loki, Tempo, Alloy, and Fluent Bit
+type: application
+version: 0.1.0
+appVersion: "1.0"
+
+dependencies:
+  - name: alloy
+    version: 1.1.2
+    repository: https://grafana.github.io/helm-charts
+    condition: alloy.enabled
+
+  - name: loki
+    version: 6.31.0
+    repository: https://grafana.github.io/helm-charts
+    condition: loki.enabled
+
+  - name: fluent-bit
+    version: 2.6.0
+    repository: https://grafana.github.io/helm-charts
+    condition: fluent-bit.enabled
+
+  - name: tempo
+    version: 1.23.2
+    repository: https://grafana.github.io/helm-charts
+    condition: tempo.enabled
+
+  - name: grafana
+    version: 9.2.10
+    repository: https://grafana.github.io/helm-charts
+    condition: grafana.enabled
+
+  - name: prometheus
+    version: 27.24.0
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: prometheus.enabled
+  - name: ingress-nginx
+    version: 4.7.1
+    repository: https://kubernetes.github.io/ingress-nginx
+    condition: ingress-nginx.enabled
+
+  - name: cert-manager
+    version: 1.13.0
+    repository: https://charts.jetstack.io
+    condition: cert-manager.enabled
+
+keywords:
+  - ankra
+  - monitoring
+  - observability
+  - prometheus
+  - grafana
+  - loki
+  - tempo
+  - alloy
+  - fluent-bit
+
+maintainers:
+  - name: ankra-devops-team
+    email: hello@ankra.io
+
+sources:
+  - https://github.com/CodeStaple/monitoring-stack-chart
+  - https://ankra.io

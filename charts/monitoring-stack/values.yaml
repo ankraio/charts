@@ -1,0 +1,508 @@
+# Global settings for the Ankra monitoring stack
+global:
+  # Common labels applied to all resources
+  commonLabels: {}
+
+  # Common annotations applied to all resources
+  commonAnnotations: {}
+
+  # Image pull secrets for all components
+  imagePullSecrets: []
+
+  # Default storage class for persistent volumes
+  storageClass: ""
+
+# Namespace configuration
+namespaces:
+  # Create namespaces if they don't exist
+  create: false
+
+  # Namespace definitions
+  alloy: alloy
+  grafana: grafana
+  loki: loki
+  tempo: tempo
+  fluentbit: fluent-bit
+  prometheus: prometheus
+
+# Alloy configuration for telemetry collection
+alloy:
+  enabled: true
+  # Override namespace
+  namespaceOverride: ""
+
+  # Alloy-specific values
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+
+  processors:
+    batch:
+
+  exporters:
+    otlp/tempo:
+      endpoint: monitoring-tempo.monitoring.svc:4317
+
+  service:
+    pipelines:
+      traces:
+        receivers: [otlp]
+        processors: [batch]
+        exporters: [otlp/tempo]
+
+# Loki configuration for log aggregation
+# values.yaml
+loki:
+  # values.yaml
+
+  # ───────────────────────────────────────────────────────────────────────────────
+  # Deployment mode & gateway
+  # ───────────────────────────────────────────────────────────────────────────────
+  deploymentMode: SingleBinary
+  gateway:
+    enabled: false
+
+  # ───────────────────────────────────────────────────────────────────────────────
+  # MinIO (object store)
+  # ───────────────────────────────────────────────────────────────────────────────
+  minio:
+    enabled: true
+    resources:
+      requests:
+        memory: 128Mi
+        cpu:    100m
+      limits:
+        memory: 256Mi
+        cpu:    200m
+
+  # ───────────────────────────────────────────────────────────────────────────────
+  # Loki core settings
+  # ───────────────────────────────────────────────────────────────────────────────
+  loki:
+    commonConfig:
+      replication_factor: 1
+
+    schemaConfig:
+      configs:
+        - from: "2024-04-01"
+          store: tsdb
+          object_store: s3
+          schema: v13
+          index:
+            prefix: loki_index_
+            period: 24h
+
+    pattern_ingester:
+      enabled: true
+
+    limits_config:
+      allow_structured_metadata: true
+      volume_enabled: true
+
+    ruler:
+      enable_api: true
+
+    resources:
+      requests:
+        memory: 256Mi
+        cpu:    200m
+      limits:
+        memory: 512Mi
+        cpu:    500m
+
+  # ───────────────────────────────────────────────────────────────────────────────
+  # SingleBinary StatefulSet
+  # ───────────────────────────────────────────────────────────────────────────────
+  singleBinary:
+    replicas: 1
+
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: null
+
+  # ───────────────────────────────────────────────────────────────────────────────
+  # Chunks-cache (Memcached) settings
+  # ───────────────────────────────────────────────────────────────────────────────
+  chunksCache:
+    enabled: true
+
+    # No PVC → run purely in-memory
+    persistence:
+      enabled: false
+
+    # Only one replica by default
+    replicas: 1
+
+    # Tell K8s how much to reserve
+    resources:
+      requests:
+        memory: 128Mi
+        cpu:    100m
+      limits:
+        memory: 256Mi
+        cpu:    200m
+
+  # ───────────────────────────────────────────────────────────────────────────────
+  # Zero out all other components
+  # ───────────────────────────────────────────────────────────────────────────────
+  backend:
+    replicas: 0
+  read:
+    replicas: 0
+  write:
+    replicas: 0
+  ingester:
+    replicas: 0
+  querier:
+    replicas: 0
+  queryFrontend:
+    replicas: 0
+  queryScheduler:
+    replicas: 0
+  distributor:
+    replicas: 0
+  compactor:
+    replicas: 0
+  indexGateway:
+    replicas: 0
+  bloomGateway:
+    replicas: 0
+
+
+
+# Fluent Bit configuration for log shipping
+fluent-bit:
+  orgId: 1
+  enabled: true
+  # Override namespace
+  namespaceOverride: ""
+
+  # Fluent Bit configuration from original values
+  loki:
+    serviceName: monitoring-loki.monitoring.svc.cluster.local
+    servicePort: 3100
+    serviceScheme: http
+    servicePath: /api/prom/push
+
+  config:
+    port: 2020
+    tenantID: "1"
+    batchWait: 1
+    batchSize: 1048576
+    loglevel: warn
+    lineFormat: json
+    k8sLoggingExclude: "Off"
+    k8sLoggingParser: "Off"
+    memBufLimit: "5MB"
+    bufChunkSize: "32k"
+    bufMaxSize: "32k"
+    removeKeys:
+      - kubernetes
+      - stream
+    autoKubernetesLabels: false
+    labels: '{job="fluent-bit"}'
+    labelMap:
+      kubernetes:
+        namespace_name: namespace
+        labels:
+          app: app
+          release: release
+        host: node
+        container_name: container
+        pod_name: instance
+      stream: stream
+
+  hostAliases: []
+  affinity: {}
+  annotations: {}
+  automountServiceAccountToken: true
+  deploymentStrategy: RollingUpdate
+
+  image:
+    repository: grafana/fluent-bit-plugin-loki
+    tag: 3.5
+    pullPolicy: IfNotPresent
+
+  nameOverride: fluent-bit-loki
+
+  nodeSelector: {}
+  podLabels: {}
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "2020"
+    prometheus.io/path: /api/v1/metrics/prometheus
+
+  rbac:
+    create: true
+    pspEnabled: true
+
+  resources:
+    limits:
+      memory: 100Mi
+    requests:
+      cpu: 100m
+      memory: 100Mi
+
+  serviceAccount:
+    create: true
+    name: ""
+
+  podSecurityContext: {}
+  securityContext: {}
+
+  tolerations:
+    - key: node-role.kubernetes.io/master
+      effect: NoSchedule
+
+  volumes:
+    - name: varlog
+      hostPath:
+        path: /var/log
+    - name: varlibdockercontainers
+      hostPath:
+        path: /var/lib/docker/containers
+
+  volumeMounts:
+    - name: varlog
+      mountPath: /var/log
+    - name: varlibdockercontainers
+      mountPath: /var/lib/docker/containers
+      readOnly: true
+
+  serviceMonitor:
+    enabled: false
+    interval: ""
+    additionalLabels: {}
+    annotations: {}
+
+# Tempo configuration for distributed tracing
+tempo:
+  enabled: true
+  # Override namespace
+  namespaceOverride: ""
+
+  # Tempo configuration from original values
+  replicaCount: 1
+
+  ingester:
+    replicaCount: 1
+
+  distributor:
+    replicaCount: 1
+
+  queryFrontEnd:
+    replicaCount: 1
+
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+      wal:
+        enabled: true
+        path: /var/tempo/wal
+      search_enabled: true
+
+  compactor:
+    compaction:
+      block_retention: 168h
+      max_block_bytes: 1073741824
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+# Grafana configuration for visualization
+grafana:
+  # Core Grafana settings
+  enabled: true
+  replicaCount: 1
+
+  # Disable the built-in chown init container (avoids permissions errors)
+  initChownData:
+    enabled: false
+
+  podSecurityContext:
+    fsGroup: 472
+
+  # Admin credentials
+  adminUser: admin
+  adminPassword: "7x!L8s@3j#q9Z$vM"
+
+  # Persistence
+  persistence:
+    enabled: true
+    storageClassName: ""
+    size: 5Gi
+
+  # Resource requests
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+
+  # Ingress (as you already have)
+  ingress:
+    enabled: true
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    hosts:
+      - monitor.seferon
+    path: /
+    pathType: Prefix
+    tls:
+      - secretName: grafana-tls
+        hosts:
+          - monitor.seferon
+
+  # Provision datasources via Grafana provisioning
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        # Prometheus (default)
+        - name: Prometheus
+          type: prometheus
+          access: proxy
+          url: http://monitoring-prometheus-server.monitoring.svc.cluster.local:80
+          isDefault: true
+
+        # Loki (multi-tenant)
+        - name: Loki
+          type: loki
+          access: proxy
+          url: http://monitoring-loki.monitoring.svc.cluster.local:3100
+          isDefault: false
+          jsonData:
+            disableResourceCalls: true
+            # Inject the tenant header
+            httpHeaderName1: X-Scope-OrgID
+          secureJsonData:
+            # an integer tenant/org ID — can be any numeric string
+            httpHeaderValue1: "1"
+
+        # Tempo (traces)
+        - name: Tempo
+          type: tempo
+          access: proxy
+          # HTTP port for the metrics/query API
+          url: http://monitoring-tempo.monitoring.svc.cluster.local:3200
+          isDefault: false
+          jsonData:
+            # gRPC port for real TraceQL queries
+            grpcURL: monitoring-tempo.monitoring.svc.cluster.local:4317
+
+  # Provision dashboards via Grafana provisioning
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: 'default'
+          orgId: 1
+          folder: ''
+          type: file
+          disableDeletion: false
+          editable: true
+          options:
+            path: /var/lib/grafana/dashboards/default
+
+  # Import dashboards from grafana.com
+  dashboards:
+    default:
+      node-exporter:
+        gnetId: 1860
+        revision: 37
+        datasource: Prometheus
+
+# Prometheus configuration for metrics collection
+prometheus:
+  enabled: true
+  # Override namespace
+  namespaceOverride: "prometheus"
+
+  # Prometheus configuration from original values
+  alertmanager:
+    enabled: false
+
+  pushgateway:
+    enabled: false
+
+  server:
+    updateStrategy:
+      type: OnDelete
+    persistentVolume:
+      enabled: true
+      storageClass: ""
+      accessModes:
+        - ReadWriteOnce
+      size: 10Gi
+    retention: 15d
+    service:
+      type: NodePort
+      nodePort: 30090
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+
+  kubeStateMetrics:
+    enabled: true
+    hostNetwork: false
+    hostPort: {}
+
+  nodeExporter:
+    enabled: true
+    hostNetwork: false
+    hostPort: {}
+
+# Ingress NGINX configuration
+ingress-nginx:
+  enabled: false
+  controller:
+    ingressClassResource:
+      enabled: false
+      default: true
+
+# Cert-Manager configuration
+cert-manager:
+  enabled: true
+  crds:
+    enabled: true
+    keep: true
+  installCRDs: false
+
+# ClusterIssuer for Let's Encrypt staging with selectable solver
+# clusterIssuer:
+#   name: letsencrypt-staging
+#   email: you@example.com
+#   server: https://acme-staging-v02.api.letsencrypt.org/directory
+#   privateKeySecretRefName: letsencrypt-issuer-key
+#   solver:
+#     # Choose solver type: dns01 or http01
+#     type: dns01
+#     dns01:
+#       cloudflare:
+#         apiTokenSecretRef:
+#           name: letsencrypt-issuer-cloudflare-api-key
+#           key: api-key
+#     http01:
+#       ingressClass: nginx
+
+# Example http01-only configuration:
+clusterIssuer:
+  enabled: false
+  name: letsencrypt-staging
+  email: you@example.com
+  server: https://acme-staging-v02.api.letsencrypt.org/directory
+  privateKeySecretRefName: letsencrypt-issuer-key
+  solver:
+    type: http01
+    http01:
+      ingressClass: nginx
