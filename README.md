@@ -1,6 +1,8 @@
 # Ankra Helm Charts Repository
 
-This repository contains Helm charts for Ankra's infrastructure and monitoring components.
+This repository hosts the official [Ankra](https://ankra.io) Helm charts— including `ankra-monitoring-stack` and `cloudflare-operator`. Add the repo at https://charts.ankra.io to install and keep these charts up to date with Helm.
+
+Ankra is a platform that helps teams deploy, secure, and observe workloads on Kubernetes.
 
 ## Quick Start
 
