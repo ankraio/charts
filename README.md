@@ -146,7 +146,16 @@ The Makefile handles version control integration:
 
 ## GitHub Pages Setup
 
-This repository is configured to serve charts via GitHub Pages with automated builds:
+This repository uses GitHub Actions to automatically build and deploy charts to GitHub Pages.
+
+### Initial Setup Required
+
+**⚠️ First-time setup:** You need to enable GitHub Pages manually. See [SETUP.md](SETUP.md) for detailed instructions.
+
+### Quick Setup
+1. Go to your repository Settings → Pages
+2. Set Source to "GitHub Actions" 
+3. The workflows will handle the rest automatically
 
 ### Automatic Deployment
 

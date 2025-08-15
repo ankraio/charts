@@ -107,21 +107,21 @@ jobs:
         run: |
           echo "## Chart Releases" > release_body.md
           echo "" >> release_body.md
-          
+
           # Get all chart versions and create release body
           for chart_dir in charts/*/; do
             if [ -f "$chart_dir/Chart.yaml" ]; then
               chart_name=$(basename "$chart_dir")
               version=$(grep '^version:' "$chart_dir/Chart.yaml" | awk '{print $2}')
               description=$(grep '^description:' "$chart_dir/Chart.yaml" | sed 's/description: //')
-              
+
               echo "### $chart_name v$version" >> release_body.md
               echo "" >> release_body.md
               echo "$description" >> release_body.md
               echo "" >> release_body.md
             fi
           done
-          
+
           echo "" >> release_body.md
           echo "## Installation" >> release_body.md
           echo "" >> release_body.md
@@ -137,7 +137,7 @@ jobs:
             fi
           done
           echo '```' >> release_body.md
-          
+
           # Use current date as version for multi-chart releases
           release_version=$(date '+%Y.%m.%d-%H%M')
           echo "release_version=$release_version" >> $GITHUB_OUTPUT
