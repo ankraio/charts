@@ -4,7 +4,7 @@
 # Variables
 CHARTS_DIR = charts
 PACKAGES_DIR = packages
-REPO_URL = https://ankraio.github.io/charts
+REPO_URL = https://charts.ankra.io
 
 # Default target
 .PHONY: all

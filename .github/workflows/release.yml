@@ -126,7 +126,7 @@ jobs:
           echo "## Installation" >> release_body.md
           echo "" >> release_body.md
           echo '```bash' >> release_body.md
-          echo "helm repo add ankra https://ankraio.github.io/charts" >> release_body.md
+          echo "helm repo add ankra https://charts.ankra.io" >> release_body.md
           echo "helm repo update" >> release_body.md
           echo "" >> release_body.md
           echo "# Install charts:" >> release_body.md

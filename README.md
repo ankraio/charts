@@ -2,6 +2,19 @@
 
 This repository contains Helm charts for Ankra's infrastructure and monitoring components.
 
+## Quick Start
+
+Get up and running in seconds:
+
+```bash
+# Add the repository
+helm repo add ankra https://charts.ankra.io
+helm repo update
+
+# List available charts
+helm search repo ankra
+```
+
 ## Repository Structure
 
 ```
@@ -64,7 +77,7 @@ mkdir -p packages
 helm package charts/monitoring-stack/ --destination packages/
 
 # Generate index
-helm repo index packages --url https://ankraio.github.io/charts
+helm repo index packages --url https://charts.ankra.io
 mv packages/index.yaml .
 ```
 
@@ -74,7 +87,7 @@ To use this Helm repository:
 
 ```bash
 # Add the repository
-helm repo add ankra https://ankraio.github.io/charts
+helm repo add ankra https://charts.ankra.io
 
 # Update repository index
 helm repo update
@@ -162,7 +175,7 @@ This repository uses GitHub Actions to automatically build and deploy charts to 
 The repository uses GitHub Actions to automatically:
 1. Build and package charts on every push to `main`/`master`
 2. Generate the `index.yaml` file
-3. Deploy to GitHub Pages at `https://ankraio.github.io/charts`
+3. Deploy to GitHub Pages at `https://charts.ankra.io`
 
 ### Setup Instructions
 
@@ -176,7 +189,7 @@ The repository uses GitHub Actions to automatically:
    - Run `make all` to build everything
    - Deploy to GitHub Pages
 
-3. **Repository URL:** `https://ankraio.github.io/charts`
+3. **Repository URL:** `https://charts.ankra.io`
 4. **Charts are served from the root directory**
 5. **Package files (`.tgz`) are served from the `packages/` directory**
 
@@ -186,7 +199,7 @@ Once deployed, users can add your repository:
 
 ```bash
 # Add the repository
-helm repo add ankra https://ankraio.github.io/charts
+helm repo add ankra https://charts.ankra.io
 
 # Update repository index
 helm repo update
@@ -207,7 +220,7 @@ helm upgrade my-monitoring ankra/ankra-monitoring-stack
 ### File Structure for GitHub Pages
 
 ```
-/ (served as https://ankraio.github.io/charts/)
+/ (served as https://charts.ankra.io/)
 ├── index.yaml                           # Repository index (required)
 ├── packages/                            # Chart packages
 │   ├── ankra-monitoring-stack-0.1.0.tgz
@@ -218,19 +231,3 @@ helm upgrade my-monitoring ankra/ankra-monitoring-stack
 └── README.md                            # This file
 ```
 
-## Quick Start
-
-After deployment, users can:
-
-```bash
-# Add the repository
-helm repo add ankra https://ankraio.github.io/charts
-helm repo update
-
-# List available charts
-helm search repo ankra
-
-# Install charts
-helm install my-monitoring ankra/ankra-monitoring-stack
-helm install my-cloudflare ankra/cloudflare-operator
-```
