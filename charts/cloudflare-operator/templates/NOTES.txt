@@ -1,0 +1,7 @@
+Thank you for installing cloudflare-operator!
+
+To verify that your deployment has started, run:
+  kubectl get pods -l app.kubernetes.io/name={{ include "cloudflare-operator.name" . }} -n <namespace>
+
+To uninstall the chart:
+  helm uninstall <release-name> -n <namespace>

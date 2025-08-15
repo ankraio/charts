@@ -1,0 +1,29 @@
+replicaCount: 1
+image:
+  repository: ghcr.io/adyanth/cloudflare-operator
+  tag: 0.13.1
+  pullPolicy: IfNotPresent
+# Override the name of the chart
+nameOverride: ""
+fullnameOverride: ""
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+podAnnotations: {}
+podSecurityContext: {}
+securityContext: {}
+service:
+  type: ClusterIP
+  port: 8080
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Cloudflare credentials secret must be created in the operator namespace (default: cloudflare-operator-system):
+# kubectl -n cloudflare-operator-system create secret generic cloudflare-secrets \
+#   --from-literal=CLOUDFLARE_API_TOKEN=<YOUR_API_TOKEN> \
+#   --from-literal=CLOUDFLARE_API_KEY=<YOUR_GLOBAL_API_KEY>
+#
+# The secret name should match the value in your ClusterTunnel spec (default: cloudflare-secrets)

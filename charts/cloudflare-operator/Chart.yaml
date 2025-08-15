@@ -1,0 +1,10 @@
+apiVersion: v2
+name: cloudflare-operator
+description: A Helm chart for deploying the Cloudflare Operator
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - cloudflare
+  - operator
+  - kubernetes
+  - tunnel
