@@ -154,7 +154,7 @@ This repository uses GitHub Actions to automatically build and deploy charts to 
 
 ### Quick Setup
 1. Go to your repository Settings → Pages
-2. Set Source to "GitHub Actions" 
+2. Set Source to "GitHub Actions"
 3. The workflows will handle the rest automatically
 
 ### Automatic Deployment
