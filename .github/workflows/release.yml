@@ -102,11 +102,45 @@ jobs:
         run: |
           make package
 
-      - name: Get chart version
-        id: chart_version
+      - name: Get chart versions
+        id: chart_versions
         run: |
-          version=$(grep '^version:' charts/monitoring-stack/Chart.yaml | awk '{print $2}')
-          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "## Chart Releases" > release_body.md
+          echo "" >> release_body.md
+          
+          # Get all chart versions and create release body
+          for chart_dir in charts/*/; do
+            if [ -f "$chart_dir/Chart.yaml" ]; then
+              chart_name=$(basename "$chart_dir")
+              version=$(grep '^version:' "$chart_dir/Chart.yaml" | awk '{print $2}')
+              description=$(grep '^description:' "$chart_dir/Chart.yaml" | sed 's/description: //')
+              
+              echo "### $chart_name v$version" >> release_body.md
+              echo "" >> release_body.md
+              echo "$description" >> release_body.md
+              echo "" >> release_body.md
+            fi
+          done
+          
+          echo "" >> release_body.md
+          echo "## Installation" >> release_body.md
+          echo "" >> release_body.md
+          echo '```bash' >> release_body.md
+          echo "helm repo add ankra https://ankraio.github.io/charts" >> release_body.md
+          echo "helm repo update" >> release_body.md
+          echo "" >> release_body.md
+          echo "# Install charts:" >> release_body.md
+          for chart_dir in charts/*/; do
+            if [ -f "$chart_dir/Chart.yaml" ]; then
+              chart_name=$(basename "$chart_dir")
+              echo "helm install my-$chart_name ankra/$chart_name" >> release_body.md
+            fi
+          done
+          echo '```' >> release_body.md
+          
+          # Use current date as version for multi-chart releases
+          release_version=$(date '+%Y.%m.%d-%H%M')
+          echo "release_version=$release_version" >> $GITHUB_OUTPUT
 
       - name: Create Release
         id: create_release
@@ -114,39 +148,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v${{ steps.chart_version.outputs.version }}
-          release_name: Release v${{ steps.chart_version.outputs.version }}
-          body: |
-            ## Charts
-            
-            ### ankra-monitoring-stack v${{ steps.chart_version.outputs.version }}
-            
-            A comprehensive monitoring stack umbrella chart with:
-            - Prometheus (metrics collection and alerting)
-            - Grafana (visualization and dashboards)
-            - Loki (log aggregation)
-            - Tempo (distributed tracing)
-            - Alloy (telemetry collection)
-            - Fluent Bit (log processing)
-            - Ingress NGINX (ingress controller)
-            - Cert Manager (certificate management)
-            
-            ## Installation
-            
-            ```bash
-            helm repo add ankra https://ankraio.github.io/charts
-            helm repo update
-            helm install my-monitoring ankra/ankra-monitoring-stack
-            ```
+          tag_name: release-${{ steps.chart_versions.outputs.release_version }}
+          release_name: Charts Release ${{ steps.chart_versions.outputs.release_version }}
+          body_path: release_body.md
           draft: false
           prerelease: false
 
       - name: Upload Release Assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./packages/ankra-monitoring-stack-${{ steps.chart_version.outputs.version }}.tgz
-          asset_name: ankra-monitoring-stack-${{ steps.chart_version.outputs.version }}.tgz
-          asset_content_type: application/gzip
+        run: |
+          # Upload all packaged charts
+          for package in ./packages/*.tgz; do
+            if [ -f "$package" ]; then
+              echo "Uploading $package..."
+              curl \
+                -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Content-Type: application/gzip" \
+                --data-binary @"$package" \
+                "${{ steps.create_release.outputs.upload_url }}?name=$(basename $package)&label=$(basename $package)"
+            fi
+          done

@@ -3,7 +3,7 @@ entries:
   ankra-monitoring-stack:
   - apiVersion: v2
     appVersion: "1.0"
-    created: "2025-07-17T22:17:38.625908+02:00"
+    created: "2025-08-15T18:11:40.147746+02:00"
     dependencies:
     - condition: alloy.enabled
       name: alloy
@@ -39,7 +39,7 @@ entries:
       version: 1.13.0
     description: Ankra's comprehensive monitoring stack umbrella chart with Prometheus,
       Grafana, Loki, Tempo, Alloy, and Fluent Bit
-    digest: 81d099da2cdfcca7bbf11122ab99ed2358b5b4e01924c307d6bc11ba331168ea
+    digest: 1f7faaccf09901616eeae4ed8afd1aef7192225eaca15f6a3c989f85e1260a05
     keywords:
     - ankra
     - monitoring
@@ -61,4 +61,19 @@ entries:
     urls:
     - https://ankraio.github.io/charts/ankra-monitoring-stack-0.1.0.tgz
     version: 0.1.0
-generated: "2025-07-17T22:17:38.605945+02:00"
+  cloudflare-operator:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-08-15T18:11:40.147955+02:00"
+    description: A Helm chart for deploying the Cloudflare Operator
+    digest: 7575fdb71040938489b703d34b40a3a9e8b6c19853b5827ca704cd5ae98240bf
+    keywords:
+    - cloudflare
+    - operator
+    - kubernetes
+    - tunnel
+    name: cloudflare-operator
+    urls:
+    - https://ankraio.github.io/charts/cloudflare-operator-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-08-15T18:11:40.128271+02:00"

@@ -48,7 +48,7 @@ jobs:
           # Clean and build
           make clean
           make all
-          
+
           # Verify the build
           echo "Generated packages:"
           ls -la packages/

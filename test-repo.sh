@@ -68,15 +68,21 @@ fi
 echo "🔍 Searching for charts..."
 helm search repo local
 
-# Test chart installation (dry-run)
-echo "🧪 Testing chart installation (dry-run)..."
-if helm install --dry-run --debug test-release local/ankra-monitoring-stack; then
-    echo "✅ Chart installation test passed!"
-else
-    echo "❌ Chart installation test failed!"
-    kill $SERVER_PID
-    exit 1
-fi
+# Test chart installations (dry-run)
+echo "🧪 Testing chart installations (dry-run)..."
+for chart in packages/*.tgz; do
+    if [ -f "$chart" ]; then
+        chart_name=$(basename "$chart" .tgz | sed 's/-[0-9].*//')
+        echo "Testing installation of $chart_name..."
+        if helm install --dry-run --debug "test-$chart_name" "local/$chart_name"; then
+            echo "✅ Chart $chart_name installation test passed!"
+        else
+            echo "❌ Chart $chart_name installation test failed!"
+            kill $SERVER_PID
+            exit 1
+        fi
+    fi
+done
 
 # Cleanup
 echo "🧹 Cleaning up..."
@@ -94,3 +100,11 @@ echo "3. Your repository will be available at: https://ankraio.github.io/charts"
 echo ""
 echo "Users can then add it with:"
 echo "helm repo add ankra https://ankraio.github.io/charts"
+echo ""
+echo "Available charts:"
+for chart_dir in charts/*/; do
+    if [ -f "$chart_dir/Chart.yaml" ]; then
+        chart_name=$(basename "$chart_dir")
+        echo "  - $chart_name"
+    fi
+done

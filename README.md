@@ -1,12 +1,16 @@
 # Ankra Helm Charts Repository
 
-This repository contains Helm charts for the Ankra monitoring stack.
+This repository contains Helm charts for Ankra's infrastructure and monitoring components.
 
 ## Repository Structure
 
 ```
 charts/
-├── monitoring-stack/         # Chart source code
+├── monitoring-stack/         # Comprehensive monitoring stack
+│   ├── Chart.yaml
+│   ├── values.yaml
+│   └── templates/
+├── cloudflare-operator/      # Cloudflare Operator chart
 │   ├── Chart.yaml
 │   ├── values.yaml
 │   └── templates/
@@ -78,8 +82,18 @@ helm repo update
 # Search for charts
 helm search repo ankra
 
-# Install a chart
+# Install the monitoring stack
 helm install my-monitoring ankra/ankra-monitoring-stack
+
+# Install the Cloudflare operator
+helm install cloudflare-op ankra/cloudflare-operator
+
+# Install with custom values
+helm install my-monitoring ankra/ankra-monitoring-stack -f my-values.yaml
+
+# Upgrade installations
+helm upgrade my-monitoring ankra/ankra-monitoring-stack
+helm upgrade cloudflare-op ankra/cloudflare-operator
 ```
 
 ## Charts
@@ -96,6 +110,15 @@ A comprehensive monitoring stack umbrella chart that includes:
 - **Fluent Bit** - Log processing
 - **Ingress NGINX** - Ingress controller
 - **Cert Manager** - Certificate management
+
+### cloudflare-operator
+
+A Helm chart for deploying the Cloudflare Operator, which provides:
+
+- **Cloudflare Tunnel management** - Manage Cloudflare Tunnels as Kubernetes resources
+- **DNS record management** - Automatically manage DNS records
+- **Custom Resources** - CloudflareTunnel and related CRDs
+- **Kubernetes native** - Full integration with Kubernetes APIs
 
 ## Development
 
@@ -176,9 +199,29 @@ helm upgrade my-monitoring ankra/ankra-monitoring-stack
 
 ```
 / (served as https://ankraio.github.io/charts/)
-├── index.yaml                    # Repository index (required)
-├── packages/                     # Chart packages
-│   └── ankra-monitoring-stack-0.1.0.tgz
-├── charts/                       # Source charts (optional)
-└── README.md                     # This file
+├── index.yaml                           # Repository index (required)
+├── packages/                            # Chart packages
+│   ├── ankra-monitoring-stack-0.1.0.tgz
+│   └── cloudflare-operator-0.1.0.tgz
+├── charts/                              # Source charts
+│   ├── monitoring-stack/
+│   └── cloudflare-operator/
+└── README.md                            # This file
+```
+
+## Quick Start
+
+After deployment, users can:
+
+```bash
+# Add the repository
+helm repo add ankra https://ankraio.github.io/charts
+helm repo update
+
+# List available charts
+helm search repo ankra
+
+# Install charts
+helm install my-monitoring ankra/ankra-monitoring-stack
+helm install my-cloudflare ankra/cloudflare-operator
 ```
