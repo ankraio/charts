@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ankra Helm Charts</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #f4f7fa;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --primary-color: #1d4ed8;
+      --code-bg: #f0f4f8;
+      --border-radius: 8px;
+      --font-family: 'Inter', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+    .header {
+      background: var(--card-bg);
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 1.75rem;
+      color: var(--primary-color);
+    }
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 2rem;
+    }
+    a { color: var(--primary-color); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    pre {
+      background: var(--code-bg);
+      padding: 1rem;
+      border-radius: var(--border-radius);
+      overflow-x: auto;
+    }
+    code {
+      background: var(--code-bg);
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-family: var(--font-family);
+    }
+    h1, h2, h3, h4 {
+      margin-top: 2rem;
+      font-weight: 600;
+    }
+    .footer {
+      text-align: center;
+      padding: 1rem 0;
+      font-size: 0.875rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>Ankra Helm Charts</h1>
+  </header>
+  <main class="container">
+    <div id="content">Loading...</div>
+  </main>
+  <footer class="footer">
+    © 2025 Ankra
+  </footer>
+  <script>
+    // Fetch the README.md and render it as HTML
+    fetch('README.md')
+      .then(response => response.text())
+      .then(markdown => {
+        document.getElementById('content').innerHTML = marked.parse(markdown);
+      })
+      .catch(err => {
+        document.getElementById('content').textContent = 'Unable to load README.md';
+        console.error(err);
+      });
+  </script>
+</body>
+</html>
